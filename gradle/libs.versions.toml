@@ -1,0 +1,31 @@
+[versions]
+indra = "4.0.0"
+jspecify = "1.0.0"
+jetbrains-annotations = "26.1.0"
+jakery = "0.2.1"
+shadow = "9.4.1"
+gson = "2.14.0"
+jtoml = "1.5.2"
+minecraft = "26.1.2"
+fabric-loader = "0.19.2"
+fabric-loom = "1.16-SNAPSHOT"
+fabric-api = "0.149.1+26.1.2"
+fabric-modmenu = "18.0.0-beta.1"
+
+[libraries]
+jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
+jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations" }
+jakery-runtime = { group = "io.github.wasabithumb", name = "jakery-runtime", version.ref = "jakery" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+minecraft = { group = "org.minecraft", name = "minecraft", version.ref = "minecraft" }
+fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabric-api" }
+fabric-modmenu = { group = "com.terraformersmc", name = "modmenu", version.ref = "fabric-modmenu" }
+jtoml-base = { group = "io.github.wasabithumb", name = "jtoml", version.ref = "jtoml" }
+jtoml-reflect = { group = "io.github.wasabithumb", name = "jtoml-serializer-reflect", version.ref = "jtoml" }
+
+[plugins]
+indra-base = { id = "net.kyori.indra", version.ref = "indra" }
+jakery = { id = "io.github.wasabithumb.jakery-gradle", version.ref = "jakery" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

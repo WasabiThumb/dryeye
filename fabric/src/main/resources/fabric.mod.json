@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "dryeye",
+  "version": "${version}",
+  "name": "DryEye",
+  "description": "Fixes a cruel oversight causing players' eyes to get dry",
+  "authors": [
+    "Xavier Pedraza"
+  ],
+  "contact": {
+    "homepage": "https://github.com/WasabiThumb/dryeye",
+    "sources": "https://github.com/WasabiThumb/dryeye",
+    "issues": "https://github.com/WasabiThumb/dryeye/issues"
+  },
+  "license": "Apache-2.0",
+  "icon": "assets/dryeye/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "io.github.wasabithumb.dryeye.DryEyeMod"
+    ],
+    "modmenu": [
+      "io.github.wasabithumb.dryeye.integrations.DryEyeModMenuApiImpl"
+    ]
+  },
+  "mixins": [
+    {
+      "config": "dryeye.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "io.github.wasabithumb.dryeye.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "AvatarRendererMixin",
+    "MinecraftMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
