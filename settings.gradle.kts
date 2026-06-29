@@ -11,5 +11,6 @@ include(
     ":common",
     ":app",
     ":app:bootstrap",
-    ":fabric"
+    ":fabric",
+    ":vanilla"
 )
