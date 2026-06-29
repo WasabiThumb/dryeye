@@ -4,6 +4,7 @@ import io.github.wasabithumb.dryeye.config.DryEyeConfig;
 import io.github.wasabithumb.dryeye.i18n.LangComponents;
 import io.github.wasabithumb.dryeye.manager.DryEyeManager;
 import io.github.wasabithumb.dryeye.util.MillisRange;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -16,6 +17,9 @@ import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +30,32 @@ public final class DryEyeConfigScreen extends Screen {
     private static final int PADDING = 8;
     private static final MillisRange DELAY_RANGE = MillisRange.of(50L, 100000L);
     private static final MillisRange DURATION_RANGE = MillisRange.of(10L, 1000L);
+    private static final MethodHandle M_MINECRAFT_SET_SCREEN;
+    static {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        MethodHandle mMinecraftSetScreen;
+        try {
+            // 26.2
+            mMinecraftSetScreen = lookup.findVirtual(
+                    Minecraft.class,
+                    "setScreenAndShow",
+                    MethodType.methodType(Void.TYPE, Screen.class)
+            );
+        } catch (Exception e) {
+            try {
+                // 26.1
+                mMinecraftSetScreen = lookup.findVirtual(
+                        Minecraft.class,
+                        "setScreen",
+                        MethodType.methodType(Void.TYPE, Screen.class)
+                );
+            } catch (Exception e2) {
+                e2.addSuppressed(e);
+                throw new IllegalStateException("cannot resolve setScreen method", e2);
+            }
+        }
+        M_MINECRAFT_SET_SCREEN = mMinecraftSetScreen;
+    }
 
     //
 
@@ -93,7 +123,12 @@ public final class DryEyeConfigScreen extends Screen {
     }
 
     private void doClose(boolean save) {
-        this.minecraft.setScreen(this.parent);
+        try {
+            M_MINECRAFT_SET_SCREEN.invokeExact(this.minecraft, this.parent);
+        } catch (Throwable e) {
+            if (e instanceof RuntimeException re) throw re;
+            throw new IllegalStateException("forbidden exception raised by setScreen", e);
+        }
         if (!save) return;
 
         // Save
