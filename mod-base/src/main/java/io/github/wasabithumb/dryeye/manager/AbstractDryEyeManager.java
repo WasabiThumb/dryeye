@@ -11,9 +11,11 @@ import io.github.wasabithumb.dryeye.util.LongSamplers;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.*;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -26,16 +28,26 @@ import java.util.Iterator;
 import java.util.Random;
 
 @NullMarked
-final class DryEyeManagerImpl implements DryEyeManager {
+abstract class AbstractDryEyeManager implements DryEyeManager {
+
+    private static void ensureAddressablePath(Path p) throws IOException {
+        Path parent = p.getParent();
+        if (parent == null) return;
+        if (!Files.exists(parent)) Files.createDirectories(parent);
+    }
+
+    //
 
     private final Minecraft mc;
     private final Logger logger;
+    private final Path configPath;
     private final Int2ObjectMap<Entry> cache;
     private volatile DryEyeConfig config;
 
-    DryEyeManagerImpl(Minecraft mc, Logger logger) {
+    protected AbstractDryEyeManager(Minecraft mc, Logger logger, Path configPath) {
         this.mc = mc;
         this.logger = logger;
+        this.configPath = configPath;
         this.cache = new Int2ObjectOpenHashMap<>();
         this.config = DryEyeConfig.disabled();
     }
@@ -54,12 +66,13 @@ final class DryEyeManagerImpl implements DryEyeManager {
 
     @Override
     public void loadConfig() {
-        Path file = getConfigFile();
+        Path file = this.configPath;
         TomlDryEyeConfig newConfig = new TomlDryEyeConfig();
         try {
             if (Files.isRegularFile(file)) {
                 newConfig.load(file);
             } else {
+                ensureAddressablePath(file);
                 newConfig.save(file);
             }
         } catch (IOException e) {
@@ -70,9 +83,10 @@ final class DryEyeManagerImpl implements DryEyeManager {
 
     @Override
     public void saveConfig() {
-        Path file = getConfigFile();
+        Path file = this.configPath;
         if (this.config instanceof TomlDryEyeConfig toml) {
             try {
+                ensureAddressablePath(file);
                 toml.save(file);
             } catch (IOException e) {
                 this.logger.error("Failed to save configuration", e);
@@ -95,7 +109,7 @@ final class DryEyeManagerImpl implements DryEyeManager {
         }
 
         entry.mark();
-        if (entry.tick(config)) return new ActiveBlinkState(entry.modifiedSkin());
+        if (entry.tick(config)) return new State(entry.modifiedSkin());
         return InactiveBlinkState.INSTANCE;
     }
 
@@ -188,38 +202,9 @@ final class DryEyeManagerImpl implements DryEyeManager {
         );
     }
 
-    private static Path getConfigFile() {
-        return FabricLoader.getInstance()
-                .getConfigDir()
-                .resolve("dryeye.toml");
-    }
-
     //
 
-    private static final class InactiveBlinkState implements BlinkState {
-
-        static final InactiveBlinkState INSTANCE = new InactiveBlinkState();
-
-        //
-
-        private InactiveBlinkState() { }
-
-        //
-
-
-        @Override
-        public boolean active() {
-            return false;
-        }
-
-        @Override
-        public Identifier modifiedSkin() {
-            throw new UnsupportedOperationException();
-        }
-
-    }
-
-    private record ActiveBlinkState(
+    private record State(
             Identifier modifiedSkin
     ) implements BlinkState {
 

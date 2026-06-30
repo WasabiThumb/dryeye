@@ -1,0 +1,27 @@
+license = "Apache-2.0"
+
+[[mods]]
+modId = "dryeye"
+version = "${mod_version}"
+displayName = "DryEye"
+description = "Fixes a cruel oversight causing players' eyes to get dry"
+logoFile = "assets/dryeye/icon.png"
+displayURL = "https://github.com/WasabiThumb/dryeye"
+authors = "Xavier Pedraza"
+
+[[mixins]]
+config="dryeye.mixins.json"
+
+[[dependencies.dryeye]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.1.2.71,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.dryeye]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.1,${mc_version}]"
+ordering = "NONE"
+side = "BOTH"

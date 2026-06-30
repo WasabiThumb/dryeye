@@ -84,7 +84,7 @@ abstract class TransformResourceBundlesTask : DefaultTask() {
     enum class Transformer(
         val instance: Any
     ) {
-        FABRIC(TransformerInstance.Fabric)
+        JSON(TransformerInstance.Json)
     }
 
     private sealed interface TransformerInstance {
@@ -95,7 +95,7 @@ abstract class TransformResourceBundlesTask : DefaultTask() {
 
         //
 
-        object Fabric : TransformerInstance {
+        object Json : TransformerInstance {
 
             override fun fileName(locale: String): String {
                 return "${locale.lowercase(Locale.ROOT)}.json"

@@ -1,15 +1,15 @@
+import ext.vanillaClient
 import tasks.FlattenConfigurationTask
 import tasks.TransformResourceBundlesTask
 
 plugins {
     id("java-library")
-    alias(libs.plugins.fabric.loom)
     alias(libs.plugins.indra.base)
     alias(libs.plugins.indra.git)
 }
 
-description = "Minecraft client mod for automatic skin blinking (Fabric)"
-val releaseName = "dryeye-fabric"
+description = "Minecraft client mod for automatic skin blinking (NeoForge)"
+val releaseName = "dryeye-neoforge"
 val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().get()) {
     "${rootProject.version}"
 } else {
@@ -18,7 +18,7 @@ val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName(
 
 repositories {
     mavenCentral()
-    maven("https://maven.terraformersmc.com/") // modmenu
+    maven("https://maven.neoforged.net/releases") // NeoForge
 }
 
 configurations {
@@ -31,20 +31,11 @@ dependencies {
     implementation(libs.jspecify)
     implementation(libs.jetbrains.annotations)
 
-    // Fabric
-    minecraft(libs.minecraft)
-    implementation(libs.fabric.loader)
-    implementation(libs.fabric.api)
-    implementation(libs.fabric.modmenu) // modmenu
-}
-
-loom {
-    splitEnvironmentSourceSets()
-    mods {
-        register("dryeye") {
-            sourceSet("main")
-            sourceSet("client")
-        }
+    // NeoForge
+    compileOnly(vanillaClient("${libs.minecraft.get().version}"))
+    implementation(libs.neoforge)
+    implementation("net.neoforged.fancymodloader:loader:11.0.13") {
+        exclude("com.mojang", "logging")
     }
 }
 
@@ -59,8 +50,6 @@ indra {
     }
 }
 
-// Can't simply use the shade plugin due to
-// the build time shenanigans of Fabric
 val flattenPeers = tasks.register("flattenPeers", FlattenConfigurationTask::class) {
     description = "Extracts the classes and resources from peer dependencies for shading into the mod JAR"
 
@@ -83,9 +72,14 @@ val transformResourceBundles = tasks.register("transformResourceBundles", Transf
 }
 
 tasks.processResources {
-    // Inject version
-    filesMatching("fabric.mod.json") {
-        expand("version" to releaseVersion)
+    // Inject variables
+    val props = mapOf(
+        "mod_version" to releaseVersion,
+        "mc_version" to "${libs.minecraft.get().version}"
+    )
+    inputs.properties(props)
+    filesMatching("**/neoforge.mods.toml") {
+        expand(props)
     }
 
     // Shade peer dependencies
@@ -112,4 +106,3 @@ tasks.javadocJar {
 tasks.sourcesJar {
     enabled = false
 }
-
