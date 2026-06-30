@@ -31,7 +31,7 @@ artifact. Downloads can be found
 <img src="doc/app.png" alt="DryEye UI">
 
 ## <img src="doc/headerRoadmap.png" alt="Roadmap">
-- Possible Forge/NeoForge port
+- Possible ~~Neo~~Forge port
 - Allow overriding the computed "eye style" on a per-player basis
 
 ## <img src="doc/headerLicense.png" alt="License">
