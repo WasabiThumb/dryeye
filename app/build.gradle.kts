@@ -9,7 +9,7 @@ plugins {
 description = "GUI for the DryEye core image algorithm"
 val main = "io.github.wasabithumb.dryeye.app.Bootstrap"
 val releaseName = "dryeye-app"
-val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().get()) {
+val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().orNull) {
     "${rootProject.version}"
 } else {
     "${rootProject.version}+${indraGit.commit().get().abbreviate(7).name()}"
