@@ -10,7 +10,7 @@ plugins {
 
 description = "Minecraft client mod for automatic skin blinking (NeoForge)"
 val releaseName = "dryeye-neoforge"
-val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().get()) {
+val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().orNull) {
     "${rootProject.version}"
 } else {
     "${rootProject.version}+${indraGit.commit().get().abbreviate(7).name()}"
