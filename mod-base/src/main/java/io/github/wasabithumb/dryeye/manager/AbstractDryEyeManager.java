@@ -30,6 +30,14 @@ import java.util.Random;
 @NullMarked
 abstract class AbstractDryEyeManager implements DryEyeManager {
 
+    private static void ensureAddressablePath(Path p) throws IOException {
+        Path parent = p.getParent();
+        if (parent == null) return;
+        if (!Files.exists(parent)) Files.createDirectories(parent);
+    }
+
+    //
+
     private final Minecraft mc;
     private final Logger logger;
     private final Path configPath;
@@ -64,6 +72,7 @@ abstract class AbstractDryEyeManager implements DryEyeManager {
             if (Files.isRegularFile(file)) {
                 newConfig.load(file);
             } else {
+                ensureAddressablePath(file);
                 newConfig.save(file);
             }
         } catch (IOException e) {
@@ -77,6 +86,7 @@ abstract class AbstractDryEyeManager implements DryEyeManager {
         Path file = this.configPath;
         if (this.config instanceof TomlDryEyeConfig toml) {
             try {
+                ensureAddressablePath(file);
                 toml.save(file);
             } catch (IOException e) {
                 this.logger.error("Failed to save configuration", e);

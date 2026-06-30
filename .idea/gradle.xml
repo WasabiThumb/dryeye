@@ -25,6 +25,7 @@
             <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/fabric" />
             <option value="$PROJECT_DIR$/mod-base" />
+            <option value="$PROJECT_DIR$/neoforge" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="true" />

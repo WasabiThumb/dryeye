@@ -1,6 +1,7 @@
 pluginManagement {
     repositories {
         maven("https://maven.fabricmc.net/") // Fabric
+        maven("https://maven.neoforged.net/releases") // NeoForge
         gradlePluginPortal()
     }
 }
@@ -13,4 +14,5 @@ include(
     ":app:bootstrap",
     ":mod-base",
     ":fabric",
+    ":neoforge"
 )
