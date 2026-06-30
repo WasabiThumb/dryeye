@@ -11,6 +11,6 @@ include(
     ":common",
     ":app",
     ":app:bootstrap",
+    ":mod-base",
     ":fabric",
-    ":vanilla"
 )

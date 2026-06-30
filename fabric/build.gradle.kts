@@ -5,6 +5,15 @@ plugins {
     id("java-library")
     alias(libs.plugins.fabric.loom)
     alias(libs.plugins.indra.base)
+    alias(libs.plugins.indra.git)
+}
+
+description = "Minecraft client mod for automatic skin blinking (Fabric)"
+val releaseName = "dryeye-fabric"
+val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().get()) {
+    "${rootProject.version}"
+} else {
+    "${rootProject.version}+${indraGit.commit().get().abbreviate(7).name()}"
 }
 
 repositories {
@@ -18,9 +27,7 @@ configurations {
 }
 
 dependencies {
-    add("peer", project(":common"))
-    add("peer", libs.jtoml.base)
-    add("peer", libs.jtoml.reflect)
+    add("peer", project(":mod-base"))
     implementation(libs.jspecify)
     implementation(libs.jetbrains.annotations)
 
@@ -41,8 +48,15 @@ loom {
     }
 }
 
-indra.javaVersions {
-    target(25)
+indra {
+    github("WasabiThumb", "dryeye")
+    apache2License()
+    javaVersions {
+        target(25)
+    }
+    configurePublications {
+        artifactId = releaseName
+    }
 }
 
 // Can't simply use the shade plugin due to
@@ -65,13 +79,13 @@ val transformResourceBundles = tasks.register("transformResourceBundles", Transf
     dependsOn(common.tasks.processResources)
 
     bundlesDir = common.layout.buildDirectory.dir("resources/main/io/github/wasabithumb/dryeye/bundle")
-    transformer = TransformResourceBundlesTask.Transformer.FABRIC
+    transformer = TransformResourceBundlesTask.Transformer.JSON
 }
 
 tasks.processResources {
     // Inject version
     filesMatching("fabric.mod.json") {
-        expand("version" to "${project.version}")
+        expand("version" to releaseVersion)
     }
 
     // Shade peer dependencies
@@ -86,7 +100,9 @@ tasks.processResources {
 }
 
 tasks.jar {
-    archiveBaseName = "dryeye-fabric"
+    archiveBaseName = releaseName
+    archiveVersion = releaseVersion
+    indraGit.applyVcsInformationToManifest(manifest)
 }
 
 tasks.javadocJar {

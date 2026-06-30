@@ -8,5 +8,5 @@ fun Project.vanillaClient(version: String): FileCollection {
     val task = this.tasks.register("fetchVanillaClient", FetchVanillaClientTask::class.java) {
         this.version.set(version)
     }
-    return files(task.flatMap { it.output.asFile })
+    return files(task.map { it.output.asFileTree })
 }

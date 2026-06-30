@@ -2,10 +2,18 @@
 plugins {
     id("java")
     alias(libs.plugins.indra.base)
+    alias(libs.plugins.indra.git)
     alias(libs.plugins.shadow)
 }
 
+description = "GUI for the DryEye core image algorithm"
 val main = "io.github.wasabithumb.dryeye.app.Bootstrap"
+val releaseName = "dryeye-app"
+val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().get()) {
+    "${rootProject.version}"
+} else {
+    "${rootProject.version}+${indraGit.commit().get().abbreviate(7).name()}"
+}
 
 repositories {
     mavenCentral()
@@ -19,8 +27,15 @@ dependencies {
     implementation(libs.gson)
 }
 
-indra.javaVersions {
-    target(25)
+indra {
+    github("WasabiThumb", "dryeye")
+    apache2License()
+    javaVersions {
+        target(25)
+    }
+    configurePublications {
+        artifactId = releaseName
+    }
 }
 
 tasks.sourcesJar {
@@ -32,12 +47,15 @@ tasks.javadocJar {
 }
 
 tasks.jar {
-    archiveBaseName = "dryeye-app"
+    archiveBaseName = releaseName
+    archiveVersion = releaseVersion
 }
 
 tasks.shadowJar {
     archiveClassifier = ""
-    archiveBaseName = "dryeye-app"
+    archiveBaseName = releaseName
+    archiveVersion = releaseVersion
+    indraGit.applyVcsInformationToManifest(manifest)
     manifest.attributes["Main-Class"] = main
 }
 

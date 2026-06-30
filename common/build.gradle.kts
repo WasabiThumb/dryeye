@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.jakery)
 }
 
+description = "DryEye core components used by the client mod and external tooling"
+
 repositories {
     mavenCentral()
 }
@@ -14,8 +16,15 @@ dependencies {
     implementation(libs.jakery.runtime)
 }
 
-indra.javaVersions {
-    target(25)
+indra {
+    github("WasabiThumb", "dryeye")
+    apache2License()
+    javaVersions {
+        target(25)
+    }
+    configurePublications {
+        artifactId = "dryeye-common"
+    }
 }
 
 jakery {

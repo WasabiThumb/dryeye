@@ -24,7 +24,7 @@
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/fabric" />
-            <option value="$PROJECT_DIR$/vanilla" />
+            <option value="$PROJECT_DIR$/mod-base" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="true" />

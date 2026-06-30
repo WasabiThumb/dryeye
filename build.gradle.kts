@@ -6,6 +6,7 @@ allprojects {
 plugins {
     id("java-library")
     alias(libs.plugins.indra.base)
+    alias(libs.plugins.indra.git)
 }
 
 repositories {

@@ -17,7 +17,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "io.github.wasabithumb.dryeye.DryEyeMod"
+      "io.github.wasabithumb.dryeye.FabricDryEyeMod"
     ],
     "modmenu": [
       "io.github.wasabithumb.dryeye.integrations.DryEyeModMenuApiImpl"

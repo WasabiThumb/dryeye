@@ -3,11 +3,11 @@ package tasks
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import util.Sha1PassthroughInputStream
 import java.io.InputStreamReader
@@ -23,11 +23,11 @@ abstract class FetchVanillaClientTask : DefaultTask() {
     @get:Input
     abstract val version: Property<String>
 
-    @get:OutputFile
-    abstract val output: RegularFileProperty
+    @get:OutputDirectory
+    abstract val output: DirectoryProperty
 
     init {
-        this.output.convention(this.project.layout.buildDirectory.file("tmp/${this.name}/client.jar"))
+        this.output.convention(this.project.layout.buildDirectory.dir("tmp/${this.name}"))
     }
 
     //
@@ -35,48 +35,52 @@ abstract class FetchVanillaClientTask : DefaultTask() {
     @TaskAction
     fun fetch() {
         val version = this.version.get()
-        val dest = this.output.get().asFile.toPath()
-        val destDir = dest.parent
-        if (!Files.exists(destDir)) Files.createDirectories(destDir)
+        val dir = this.output.get().asFile.toPath()
+        if (!Files.exists(dir)) Files.createDirectories(dir)
 
-        this.logger.lifecycle("fetching client JAR: $version")
-        val info = fetchClientInfo(version)
-        val sha1 = info.sha1.hexToByteArray()
+        this.logger.lifecycle("fetching client: $version")
+        for (info in fetchArtifactInfo(version)) {
+            val dest = dir.resolve(info.name)
+            val sha1 = info.sha1.hexToByteArray()
+            this.logger.lifecycle("- ${info.name}")
 
-        if (Files.exists(dest)) {
-            // check hash
-            val fileHash = sha1File(dest)
-            if (sha1.contentEquals(fileHash)) {
-                this.logger.lifecycle("hash matched, skipping")
-                return
-            }
-        }
-
-        val c = httpConnection(info.url)
-        val ok = c.getInputStream().use { raw ->
-            val src = Sha1PassthroughInputStream(raw)
-            Files.newOutputStream(dest).use { out ->
-                val buf = ByteArray(8192)
-                var read: Int
-                while (true) {
-                    read = src.read(buf)
-                    if (read == -1) break
-                    out.write(buf, 0, read)
+            // Check hash
+            if (Files.exists(dest)) {
+                val fileHash = sha1File(dest)
+                if (sha1.contentEquals(fileHash)) {
+                    this.logger.lifecycle("hash matched, skipping")
+                    continue
                 }
-                sha1.contentEquals(src.digest())
             }
-        }
 
-        if (!ok) {
-            Files.deleteIfExists(dest)
-            throw IllegalStateException("failed to download (hash mismatch)")
+            // Download
+            val c = httpConnection(info.url)
+            val ok = c.getInputStream().use { raw ->
+                val src = Sha1PassthroughInputStream(raw)
+                Files.newOutputStream(dest).use { out ->
+                    val buf = ByteArray(8192)
+                    var read: Int
+                    while (true) {
+                        read = src.read(buf)
+                        if (read == -1) break
+                        out.write(buf, 0, read)
+                    }
+                    sha1.contentEquals(src.digest())
+                }
+            }
+
+            if (!ok) {
+                Files.deleteIfExists(dest)
+                throw IllegalStateException("failed to download (hash mismatch)")
+            }
         }
     }
 
 
     //
 
-    private data class ClientInfo(
+    private data class ArtifactInfo(
+        val name: String,
         val url: String,
         val sha1: String
     )
@@ -97,24 +101,52 @@ abstract class FetchVanillaClientTask : DefaultTask() {
             }
         }
 
-        private fun fetchClientInfo(version: String): ClientInfo {
+        private fun fetchArtifactInfo(version: String): List<ArtifactInfo> {
+            val ret = mutableListOf<ArtifactInfo>()
             val pkg = fetchPackage(version)
+
+            // Client JAR
             val downloads = pkg.get("downloads") ?: throw IllegalStateException("missing required key: downloads")
             if (!downloads.isJsonObject) throw IllegalStateException("\"downloads\" is not an object")
             val client = downloads.asJsonObject.get("client") ?: throw IllegalStateException("missing required key: client")
             if (!client.isJsonObject) throw IllegalStateException("\"client\" is not an object")
-            val url = client.asJsonObject.get("url") ?: throw IllegalStateException("missing required key: url")
-            if (!url.isJsonPrimitive || !url.asJsonPrimitive.isString) throw IllegalStateException("\"url\" is not a string")
-            val sha1 = client.asJsonObject.get("sha1") ?: throw IllegalStateException("missing required key: sha1")
-            if (!sha1.isJsonPrimitive || !sha1.asJsonPrimitive.isString) throw IllegalStateException("\"sha1\" is not a string")
-            return ClientInfo(
-                url = url.asJsonPrimitive.asString,
-                sha1 = sha1.asJsonPrimitive.asString
-            )
+            val clientUrl = client.asJsonObject.get("url") ?: throw IllegalStateException("missing required key: url")
+            if (!clientUrl.isJsonPrimitive || !clientUrl.asJsonPrimitive.isString) throw IllegalStateException("\"url\" is not a string")
+            val clientSha1 = client.asJsonObject.get("sha1") ?: throw IllegalStateException("missing required key: sha1")
+            if (!clientSha1.isJsonPrimitive || !clientSha1.asJsonPrimitive.isString) throw IllegalStateException("\"sha1\" is not a string")
+            ret.add(ArtifactInfo(
+                name = "client.jar",
+                url = clientUrl.asJsonPrimitive.asString,
+                sha1 = clientSha1.asJsonPrimitive.asString
+            ))
+
+            // Libraries
+            val libraries = pkg.get("libraries") ?: throw IllegalStateException("missing required key: libraries")
+            if (!libraries.isJsonArray) throw IllegalStateException("\"libraries\" is not an array")
+            for (element in libraries.asJsonArray) {
+                val entry = element.asJsonObject
+                if (entry.has("rules") && entry.get("rules").asJsonArray.size() != 0) continue
+
+                val artifact = entry
+                    .get("downloads")
+                    .asJsonObject
+                    .get("artifact")
+                    .asJsonObject
+
+                val url = artifact.get("url").asJsonPrimitive.asString
+                val sha1 = artifact.get("sha1").asJsonPrimitive.asString
+                ret.add(ArtifactInfo(
+                    name = url.substring(url.lastIndexOf('/') + 1),
+                    url = url,
+                    sha1 = sha1
+                ))
+            }
+
+            return ret
         }
 
         private fun fetchPackage(version: String): JsonObject {
-            val manifest = fetchJsonObject("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
+            val manifest = fetchJsonObject("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json")
             val versions = manifest.get("versions") ?: throw IllegalStateException("missing required key: versions")
             if (!versions.isJsonArray) throw IllegalStateException("\"versions\" is not an array")
             val version = versions.asJsonArray.find {
