@@ -23,7 +23,7 @@ final class DryEyeManagerAccess {
     }
 
     @Pinned(reason = "used by io.github.wasabithumb.dryeye.DryEye")
-    static void register(@Nullable DryEyeManager manager) {
+    public static void register(@Nullable DryEyeManager manager) {
         final Lock l = TRUTH_LOCK.writeLock();
         l.lock();
         try {

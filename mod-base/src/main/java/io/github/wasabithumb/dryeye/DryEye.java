@@ -19,7 +19,9 @@ public abstract class DryEye {
     static {
         try {
             Class<?> cls = Class.forName("io.github.wasabithumb.dryeye.manager.DryEyeManagerAccess");
-            M_REGISTER_MANAGER = cls.getDeclaredMethod("register", DryEyeManager.class);
+            Method mRegister = cls.getDeclaredMethod("register", DryEyeManager.class);
+            mRegister.setAccessible(true);
+            M_REGISTER_MANAGER = mRegister;
         } catch (Exception e) {
             throw new IllegalStateException("Failed to resolve register method", e);
         }
