@@ -1,5 +1,6 @@
 package io.github.wasabithumb.dryeye.manager;
 
+import io.github.wasabithumb.dryeye.NeoForgeDryEyeMod;
 import net.minecraft.client.Minecraft;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
@@ -13,7 +14,7 @@ public final class NeoForgeDryEyeManager extends AbstractDryEyeManager {
     public static NeoForgeDryEyeManager create(Minecraft mc) {
         return new NeoForgeDryEyeManager(
                 mc,
-                LoggerFactory.getLogger("DryEye"),
+                NeoForgeDryEyeMod.LOGGER,
                 mc.gameDirectory.toPath().resolve("config/dryeye.toml")
         );
     }
