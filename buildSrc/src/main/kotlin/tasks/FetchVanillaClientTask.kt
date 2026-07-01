@@ -5,8 +5,10 @@ import com.google.gson.JsonObject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import util.Sha1PassthroughInputStream
@@ -23,10 +25,14 @@ abstract class FetchVanillaClientTask : DefaultTask() {
     @get:Input
     abstract val version: Property<String>
 
+    @get:Nested
+    abstract val libraries: SetProperty<Library>
+
     @get:OutputDirectory
     abstract val output: DirectoryProperty
 
     init {
+        this.libraries.convention(setOf())
         this.output.convention(this.project.layout.buildDirectory.dir("tmp/${this.name}"))
     }
 
@@ -36,10 +42,15 @@ abstract class FetchVanillaClientTask : DefaultTask() {
     fun fetch() {
         val version = this.version.get()
         val dir = this.output.get().asFile.toPath()
+        val libs = this.libraries.get()
         if (!Files.exists(dir)) Files.createDirectories(dir)
 
         this.logger.lifecycle("fetching client: $version")
         for (info in fetchArtifactInfo(version)) {
+            if (Library.CLIENT != info.library && !libs.contains(info.library)) {
+                continue
+            }
+
             val dest = dir.resolve(info.name)
             val sha1 = info.sha1.hexToByteArray()
             this.logger.lifecycle("- ${info.name}")
@@ -76,10 +87,34 @@ abstract class FetchVanillaClientTask : DefaultTask() {
         }
     }
 
+    fun useLibrary(libraryNotation: String) {
+        this.libraries.add(Library.fromNotation(libraryNotation))
+    }
 
     //
 
+
+    data class Library(
+        @get:Input val group: String,
+        @get:Input val name: String
+    ) {
+
+        companion object {
+
+            val CLIENT = Library("net.minecraft", "client")
+
+            fun fromNotation(notation: String): Library {
+                val split = notation.split(':')
+                if (split.size < 2) throw IllegalArgumentException()
+                return Library(split[0], split[1])
+            }
+
+        }
+
+    }
+
     private data class ArtifactInfo(
+        val library: Library,
         val name: String,
         val url: String,
         val sha1: String
@@ -115,6 +150,7 @@ abstract class FetchVanillaClientTask : DefaultTask() {
             val clientSha1 = client.asJsonObject.get("sha1") ?: throw IllegalStateException("missing required key: sha1")
             if (!clientSha1.isJsonPrimitive || !clientSha1.asJsonPrimitive.isString) throw IllegalStateException("\"sha1\" is not a string")
             ret.add(ArtifactInfo(
+                library = Library.CLIENT,
                 name = "client.jar",
                 url = clientUrl.asJsonPrimitive.asString,
                 sha1 = clientSha1.asJsonPrimitive.asString
@@ -127,6 +163,10 @@ abstract class FetchVanillaClientTask : DefaultTask() {
                 val entry = element.asJsonObject
                 if (entry.has("rules") && entry.get("rules").asJsonArray.size() != 0) continue
 
+                val name = entry.get("name")
+                    .asJsonPrimitive
+                    .asString
+
                 val artifact = entry
                     .get("downloads")
                     .asJsonObject
@@ -136,6 +176,7 @@ abstract class FetchVanillaClientTask : DefaultTask() {
                 val url = artifact.get("url").asJsonPrimitive.asString
                 val sha1 = artifact.get("sha1").asJsonPrimitive.asString
                 ret.add(ArtifactInfo(
+                    library = Library.fromNotation(name),
                     name = url.substring(url.lastIndexOf('/') + 1),
                     url = url,
                     sha1 = sha1

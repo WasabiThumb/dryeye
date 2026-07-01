@@ -32,7 +32,10 @@ dependencies {
     implementation(libs.jetbrains.annotations)
 
     // NeoForge
-    compileOnly(vanillaClient("${libs.minecraft.get().version}"))
+    compileOnly(vanillaClient("${libs.minecraft.get().version}") {
+        useLibrary("com.mojang:logging")
+        useLibrary("org.slf4j:slf4j-api")
+    })
     implementation(libs.neoforge)
     implementation("net.neoforged.fancymodloader:loader:11.0.13") {
         exclude("com.mojang", "logging")
