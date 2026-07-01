@@ -6,6 +6,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 rootProject.name = "dryeye"
 
 include(
@@ -14,5 +18,6 @@ include(
     ":app:bootstrap",
     ":mod-base",
     ":fabric",
-    ":neoforge"
+    ":neoforge",
+    ":forge"
 )

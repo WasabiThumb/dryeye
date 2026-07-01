@@ -1,24 +1,32 @@
-import ext.vanillaClient
 import tasks.FlattenConfigurationTask
 import tasks.TransformResourceBundlesTask
 
 plugins {
     id("java-library")
+    alias(libs.plugins.forge.gradle)
     alias(libs.plugins.indra.base)
     alias(libs.plugins.indra.git)
 }
 
-description = "Minecraft client mod for automatic skin blinking (NeoForge)"
-val releaseName = "dryeye-neoforge"
+description = "Minecraft client mod for automatic skin blinking (Forge)"
+val releaseName = "dryeye-forge"
 val releaseVersion = if (!indraGit.isPresent || "master" == indraGit.branchName().orNull) {
     "${rootProject.version}"
 } else {
     "${rootProject.version}+${indraGit.commit().get().abbreviate(7).name()}"
 }
+val minecraftVersion = libs.versions.minecraft.get()
+val forgeVersion = libs.versions.forge.asProvider().get()
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 repositories {
     mavenCentral()
-    maven("https://maven.neoforged.net/releases") // NeoForge
+
+    // Forge
+    minecraft.mavenizer(this)
+    maven(fg.forgeMaven)
+    maven(fg.minecraftLibsMaven)
 }
 
 configurations {
@@ -31,14 +39,11 @@ dependencies {
     implementation(libs.jspecify)
     implementation(libs.jetbrains.annotations)
 
-    // NeoForge
-    compileOnly(vanillaClient("${libs.minecraft.get().version}") {
-        useLibrary("com.mojang:logging")
-        useLibrary("org.slf4j:slf4j-api")
-    })
-    implementation(libs.neoforge)
-    implementation("net.neoforged.fancymodloader:loader:11.0.13") {
-        exclude("com.mojang", "logging")
+    // Forge
+    annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
+    implementation(minecraft.dependency("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")) {
+        exclude("net.minecraftforge", "JarJarSelector")
+        exclude("net.minecraftforge", "JarJarMetadata")
     }
 }
 
@@ -53,6 +58,21 @@ indra {
     }
 }
 
+minecraft {
+    mappings("official", minecraftVersion)
+    runs {
+        configureEach {
+            workingDir.convention(layout.projectDirectory.dir("run"))
+            args("--mixin.config=dryeye.mixins.json")
+        }
+        register("client") {
+            systemProperty("forge.enabledGameTestNamespaces", "dryeye")
+        }
+    }
+}
+
+// Can't simply use the shade plugin due to
+// the build time shenanigans of Fabric
 val flattenPeers = tasks.register("flattenPeers", FlattenConfigurationTask::class) {
     description = "Extracts the classes and resources from peer dependencies for shading into the mod JAR"
 
@@ -60,7 +80,8 @@ val flattenPeers = tasks.register("flattenPeers", FlattenConfigurationTask::clas
     exclusions = setOf(
         "META-INF/MANIFEST.MF",
         "META-INF/versions",
-        "io/github/wasabithumb/dryeye/bundle"
+        "io/github/wasabithumb/dryeye/bundle",
+        "org"
     )
 }
 
@@ -78,10 +99,10 @@ tasks.processResources {
     // Inject variables
     val props = mapOf(
         "mod_version" to releaseVersion,
-        "mc_version" to "${libs.minecraft.get().version}"
+        "mc_version" to minecraftVersion
     )
     inputs.properties(props)
-    filesMatching("**/neoforge.mods.toml") {
+    filesMatching("**/mods.toml") {
         expand(props)
     }
 
@@ -100,6 +121,7 @@ tasks.jar {
     archiveBaseName = releaseName
     archiveVersion = releaseVersion
     indraGit.applyVcsInformationToManifest(manifest)
+    manifest.attributes["MixinConfigs"] = "dryeye.mixins.json"
 }
 
 tasks.javadocJar {

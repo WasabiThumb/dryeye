@@ -1,9 +1,10 @@
 # <img src="doc/banner.png" alt="DryEye">
 
 ## <img src="doc/headerAbout.png" alt="About">
-DryEye is a proof-of-concept Fabric mod that automatically
+DryEye is a proof-of-concept **Fabric, Forge and NeoForge
+mod** that **automatically
 modifies player skins so that they can blink
-periodically. It injects a lightweight callback into
+periodically**. It injects a lightweight callback into
 the ``AvatarRenderer`` to substitute player skins with a
 computed "blink variant" based on complex heuristics. This is
 a fuzzy system that won't always work properly, so
@@ -31,7 +32,6 @@ artifact. Downloads can be found
 <img src="doc/app.png" alt="DryEye UI">
 
 ## <img src="doc/headerRoadmap.png" alt="Roadmap">
-- Possible ~~Neo~~Forge port
 - Allow overriding the computed "eye style" on a per-player basis
 
 ## <img src="doc/headerLicense.png" alt="License">

@@ -12,8 +12,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly(vanillaClient("${libs.minecraft.get().version}")) // Reference vanilla client symbols
-    compileOnly(libs.fabric.mixin)                                         // Reference mixin symbols
+    // Reference vanilla client symbols
+    compileOnly(vanillaClient("${libs.minecraft.get().version}") {
+        useLibrary("it.unimi.dsi:fastutil")
+        useLibrary("org.slf4j:slf4j-api")
+        useLibrary("com.mojang:brigadier")
+    })
+    compileOnly(libs.fabric.mixin) // Reference mixin symbols
     implementation(project(":common"))
     implementation(libs.jtoml.base)
     implementation(libs.jtoml.reflect)

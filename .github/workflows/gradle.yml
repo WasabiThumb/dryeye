@@ -44,3 +44,9 @@ jobs:
         with:
           path: ./neoforge/build/libs/*.jar
           archive: false
+
+      - name: Upload Forge artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          path: ./forge/build/libs/*.jar
+          archive: false
