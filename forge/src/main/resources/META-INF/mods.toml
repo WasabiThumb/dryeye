@@ -1,3 +1,5 @@
+modLoader = "javafml"
+loaderVersion = "[0,)"
 license = "Apache-2.0"
 
 [[mods]]
@@ -9,19 +11,16 @@ logoFile = "assets/dryeye/icon.png"
 displayURL = "https://modrinth.com/project/4gxXfaZG"
 authors = "Xavier Pedraza"
 
-[[mixins]]
-config="dryeye.mixins.json"
-
 [[dependencies.dryeye]]
-modId = "neoforge"
-type = "required"
-versionRange = "[26.1.2.71,)"
+modId = "forge"
+mandatory = true
+versionRange = "[62,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.dryeye]]
 modId = "minecraft"
-type = "required"
+mandatory = true
 versionRange = "[26.1,${mc_version}]"
 ordering = "NONE"
 side = "BOTH"
