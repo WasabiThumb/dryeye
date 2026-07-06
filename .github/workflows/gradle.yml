@@ -36,17 +36,17 @@ jobs:
       - name: Upload Fabric artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          path: ./fabric/build/libs/*.jar
+          path: ./mod/fabric/build/libs/*.jar
           archive: false
 
       - name: Upload NeoForge artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          path: ./neoforge/build/libs/*.jar
+          path: ./mod/neoforge/build/libs/*.jar
           archive: false
 
       - name: Upload Forge artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          path: ./forge/build/libs/*.jar
+          path: ./mod/forge/build/libs/*.jar
           archive: false
