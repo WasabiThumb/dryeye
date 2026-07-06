@@ -61,6 +61,10 @@ tasks.shadowJar {
     archiveVersion = releaseVersion
     indraGit.applyVcsInformationToManifest(manifest)
     manifest.attributes["MixinConfigs"] = "dryeye.mixins.json"
+
+    // Forge doesn't like us shading annotations because... something something JPMS?
+    // This doesn't break anything because the annotations don't exist at runtime, but it's strange.
+    exclude("org/intellij/lang/annotations/**/*", "org/jetbrains/**/*", "org/jspecify/**/*")
 }
 
 tasks.assemble {
